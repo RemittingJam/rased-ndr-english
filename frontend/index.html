@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Rased NDR - Explainable PCAP analysis and network detection platform">
+    <title>Rased NDR</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">R</div>
+                <div>
+                    <h1>Rased NDR</h1>
+                    <p>Network Detection Lab</p>
+                </div>
+            </div>
+
+            <nav>
+                <button class="nav-item active" data-target="overview">
+                    <span>⌁</span> Overview
+                </button>
+                <button class="nav-item" data-target="alerts">
+                    <span>!</span> Alerts
+                </button>
+                <button class="nav-item" data-target="traffic">
+                    <span>↗</span> Network Traffic
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <span class="status-dot"></span>
+                <span>Engine ready</span>
+                <small>v0.1.1</small>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <p class="eyebrow">EXPLAINABLE NETWORK SECURITY</p>
+                    <h2>Network Analysis Dashboard</h2>
+                </div>
+                <div class="header-actions">
+                    <button id="demoButton" class="button secondary">Run Demo</button>
+                    <label for="pcapInput" class="button primary">Upload PCAP</label>
+                    <input id="pcapInput" type="file" accept=".pcap,.pcapng,.cap" hidden>
+                </div>
+            </header>
+
+            <section id="uploadPanel" class="upload-panel">
+                <div class="upload-icon">⌁</div>
+                <div>
+                    <h3>Start with a packet capture</h3>
+                    <p>Drop a PCAP file here or use the upload button. Maximum size: 100 MB.</p>
+                </div>
+                <div class="safe-badge">Local, passive analysis</div>
+            </section>
+
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <span>Analyzing network traffic...</span>
+            </div>
+
+            <div id="errorBox" class="error-box hidden"></div>
+
+            <section id="dashboard" class="dashboard hidden">
+                <div class="file-strip">
+                    <div>
+                        <span class="muted">Current file</span>
+                        <strong id="fileName">—</strong>
+                    </div>
+                    <div>
+                        <span class="muted">Capture duration</span>
+                        <strong id="duration">—</strong>
+                    </div>
+                    <div>
+                        <span class="muted">Capture start</span>
+                        <strong id="firstSeen">—</strong>
+                    </div>
+                </div>
+
+                <section id="overview" class="page-section active">
+                    <div class="stats-grid">
+                        <article class="stat-card">
+                            <span class="stat-label">Packets analyzed</span>
+                            <strong id="packetCount">0</strong>
+                            <small>Packet analysis</small>
+                        </article>
+                        <article class="stat-card">
+                            <span class="stat-label">Devices discovered</span>
+                            <strong id="deviceCount">0</strong>
+                            <small>Unique IP addresses</small>
+                        </article>
+                        <article class="stat-card">
+                            <span class="stat-label">Protocols observed</span>
+                            <strong id="protocolCount">0</strong>
+                            <small>Observed protocols</small>
+                        </article>
+                        <article class="stat-card accent">
+                            <span class="stat-label">Detection alerts</span>
+                            <strong id="alertCount">0</strong>
+                            <small>Detection results</small>
+                        </article>
+                    </div>
+
+                    <div class="content-grid">
+                        <article class="panel">
+                            <div class="panel-header">
+                                <div>
+                                    <span class="eyebrow">PROTOCOLS</span>
+                                    <h3>Protocol Distribution</h3>
+                                </div>
+                            </div>
+                            <div id="protocolChart" class="bar-chart"></div>
+                        </article>
+
+                        <article class="panel">
+                            <div class="panel-header">
+                                <div>
+                                    <span class="eyebrow">TOP HOSTS</span>
+                                    <h3>Most Active Hosts</h3>
+                                </div>
+                            </div>
+                            <div id="topHosts" class="host-list"></div>
+                        </article>
+                    </div>
+
+                    <article class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <span class="eyebrow">TIMELINE</span>
+                                <h3>Packets Over Time</h3>
+                            </div>
+                        </div>
+                        <div id="timelineChart" class="timeline-chart"></div>
+                    </article>
+                </section>
+
+                <section id="alerts" class="page-section">
+                    <article class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <span class="eyebrow">DETECTION ENGINE</span>
+                                <h3>Alerts and Evidence</h3>
+                            </div>
+                        </div>
+                        <div id="alertsList" class="alerts-list"></div>
+                    </article>
+                </section>
+
+                <section id="traffic" class="page-section">
+                    <article class="panel">
+                        <div class="panel-header">
+                            <div>
+                                <span class="eyebrow">CONVERSATIONS</span>
+                                <h3>Most Active Conversations</h3>
+                            </div>
+                        </div>
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Source</th>
+                                        <th>Destination</th>
+                                        <th>Packets</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="conversationsTable"></tbody>
+                            </table>
+                        </div>
+                    </article>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
