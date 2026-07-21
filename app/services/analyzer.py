@@ -4,6 +4,7 @@ from collections import Counter, defaultdict, deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from app.detections.port_scan import PortScanRule
 
 from scapy.all import DNS, DNSQR, IP, IPv6, TCP, UDP, PcapReader
 
@@ -179,7 +180,7 @@ def analyze_pcap(path: Path, original_name: str | None = None) -> dict:
                     query = str(raw_query).rstrip(".")
                 dns_events.append((timestamp, src, query))
 
-    alerts = _detect_port_scans(tcp_port_events)
+    alerts = PortScanRule().detect({"tcp_port_events": tcp_port_events})
     alerts.extend(_detect_dns_spikes(dns_events))
     severity_order = {"critical": 0, "high": 1, "medium": 2, "low": 3, "info": 4}
     alerts.sort(key=lambda item: severity_order.get(item["severity"], 99))
