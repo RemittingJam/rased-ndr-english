@@ -7,8 +7,7 @@ from typing import Any
 
 from scapy.all import DNS, DNSQR, IP, IPv6, TCP, UDP, PcapReader
 
-from app.detections.dns_spike import DnsSpikeRule
-from app.detections.port_scan import PortScanRule
+from app.detections.engine import DetectionEngine
 
 
 MAX_PACKETS = 500_000
@@ -40,7 +39,10 @@ def _protocol_name(packet: Any) -> str:
     if IPv6 in packet:
         return "IPv6"
 
-    return packet.lastlayer().name if packet.lastlayer() else "Other"
+    if packet.lastlayer():
+        return packet.lastlayer().name
+
+    return "Other"
 
 
 def _iso_time(timestamp: float | None) -> str | None:
@@ -56,7 +58,7 @@ def _iso_time(timestamp: float | None) -> str | None:
 def analyze_pcap(
     path: Path,
     original_name: str | None = None,
-) -> dict:
+) -> dict[str, Any]:
     protocol_counts: Counter[str] = Counter()
     host_counts: Counter[str] = Counter()
     conversation_counts: Counter[tuple[str, str]] = Counter()
@@ -81,12 +83,18 @@ def analyze_pcap(
             if first_timestamp is None:
                 first_timestamp = timestamp
             else:
-                first_timestamp = min(first_timestamp, timestamp)
+                first_timestamp = min(
+                    first_timestamp,
+                    timestamp,
+                )
 
             if last_timestamp is None:
                 last_timestamp = timestamp
             else:
-                last_timestamp = max(last_timestamp, timestamp)
+                last_timestamp = max(
+                    last_timestamp,
+                    timestamp,
+                )
 
             timeline[int(timestamp)] += 1
             protocol_counts[_protocol_name(packet)] += 1
@@ -100,7 +108,9 @@ def analyze_pcap(
                 host_counts[destination] += 1
 
             if source and destination:
-                conversation_counts[(source, destination)] += 1
+                conversation_counts[
+                    (source, destination)
+                ] += 1
 
             if source and destination and TCP in packet:
                 flags = int(packet[TCP].flags)
@@ -136,18 +146,13 @@ def analyze_pcap(
                     )
                 )
 
-    alerts = PortScanRule().detect(
-        {
-            "tcp_port_events": tcp_port_events,
-        }
-    )
+    detection_context = {
+        "tcp_port_events": tcp_port_events,
+        "dns_events": dns_events,
+    }
 
-    alerts.extend(
-        DnsSpikeRule().detect(
-            {
-                "dns_events": dns_events,
-            }
-        )
+    alerts = DetectionEngine().run(
+        detection_context
     )
 
     severity_order = {
@@ -167,7 +172,10 @@ def analyze_pcap(
 
     duration = 0.0
 
-    if first_timestamp is not None and last_timestamp is not None:
+    if (
+        first_timestamp is not None
+        and last_timestamp is not None
+    ):
         duration = max(
             0.0,
             last_timestamp - first_timestamp,
@@ -198,7 +206,9 @@ def analyze_pcap(
             "timestamp": _iso_time(float(second)),
             "packets": count,
         }
-        for second, count in sorted(timeline.items())[:300]
+        for second, count in sorted(
+            timeline.items()
+        )[:300]
     ]
 
     analyzed_packets = min(
@@ -212,10 +222,19 @@ def analyze_pcap(
             "version": "0.1.1",
             "filename": original_name or path.name,
             "analyzed_packets": analyzed_packets,
-            "packet_limit_reached": packet_count > MAX_PACKETS,
-            "first_seen": _iso_time(first_timestamp),
-            "last_seen": _iso_time(last_timestamp),
-            "duration_seconds": round(duration, 3),
+            "packet_limit_reached": (
+                packet_count > MAX_PACKETS
+            ),
+            "first_seen": _iso_time(
+                first_timestamp
+            ),
+            "last_seen": _iso_time(
+                last_timestamp
+            ),
+            "duration_seconds": round(
+                duration,
+                3,
+            ),
         },
         "summary": {
             "packets": analyzed_packets,
