@@ -1,16 +1,17 @@
 # Rased NDR
 
-An open-source platform for PCAP analysis and explainable network detection.
-
+[![Tests](https://github.com/RemittingJam/rased-ndr-english/actions/workflows/tests.yml/badge.svg)](https://github.com/RemittingJam/rased-ndr-english/actions/workflows/tests.yml)
 ![Version](https://img.shields.io/badge/version-0.1.1-34d399)
 ![Python](https://img.shields.io/badge/Python-3.11%2B-22d3ee)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
+An open-source platform for PCAP analysis and explainable network detection.
+
 ## Overview
 
-**Rased NDR** is a defensive network-analysis project that extracts useful information from packet captures and applies simple detection rules to identify potentially suspicious activity.
+**Rased NDR** is a defensive network-analysis project that extracts useful information from packet captures and applies detection rules to identify potentially suspicious activity.
 
-The platform focuses on explainability: every alert includes a reason, source, destination, confidence score, and supporting evidence.
+The platform focuses on explainability. Every alert includes a reason, source, destination, confidence score, and supporting evidence.
 
 It is designed for students and practitioners interested in:
 
@@ -30,9 +31,15 @@ It is designed for students and practitioners interested in:
 - Possible port-scan detection
 - Unusual DNS activity detection
 - Explainable alerts with confidence scores
+- Supporting evidence for generated alerts
 - Packet timeline visualization
+- Modular detection-rule architecture
+- Centralized detection engine
 - Built-in demo mode
-- FastAPI backend and interactive API documentation
+- FastAPI backend
+- Interactive API documentation
+- Automated tests with Pytest
+- GitHub Actions continuous integration
 - Docker support
 
 ## Screenshots
@@ -48,8 +55,6 @@ It is designed for students and practitioners interested in:
 ### Network Traffic
 
 ![Rased NDR Traffic](docs/screenshots/traffic.png)
-
-> After switching the interface to English, replace these screenshots with updated English versions using the same filenames.
 
 ## Requirements
 
@@ -160,6 +165,22 @@ ReDoc documentation:
 http://127.0.0.1:8000/redoc
 ```
 
+## Detection Architecture
+
+Rased NDR uses a modular detection architecture.
+
+Each detection rule is stored in its own Python module and implements the shared `DetectionRule` interface.
+
+The centralized `DetectionEngine` runs all registered rules using the analysis context produced by the PCAP analyzer.
+
+This design makes it easier to:
+
+- Add new detection rules
+- Test rules independently
+- Reduce duplicated logic
+- Maintain the analyzer
+- Expand the platform in future versions
+
 ## Current Detection Rules
 
 ### RASED-NET-001 — Possible Port Scan
@@ -191,7 +212,7 @@ Time window: 10 seconds
 Severity: Low
 ```
 
-Possible legitimate causes include applications that use many domains, background services, or unusual DNS configurations.
+Possible legitimate causes include applications that use many domains, background services, and unusual DNS configurations.
 
 These rules are educational and may produce false positives in some environments.
 
@@ -218,10 +239,19 @@ Maximum packets analyzed per capture:
 ## Project Structure
 
 ```text
-rased-ndr/
+rased-ndr-english/
+├── .github/
+│   └── workflows/
+│       └── tests.yml
 ├── app/
 │   ├── __init__.py
 │   ├── main.py
+│   ├── detections/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── engine.py
+│   │   ├── port_scan.py
+│   │   └── dns_spike.py
 │   └── services/
 │       ├── __init__.py
 │       ├── analyzer.py
@@ -236,7 +266,11 @@ rased-ndr/
 │   ├── styles.css
 │   └── app.js
 ├── tests/
-│   └── test_demo.py
+│   ├── test_demo.py
+│   ├── test_port_scan.py
+│   ├── test_dns_spike.py
+│   ├── test_detection_engine.py
+│   └── test_clean_traffic.py
 ├── .gitignore
 ├── Dockerfile
 ├── docker-compose.yml
@@ -248,23 +282,58 @@ rased-ndr/
 
 ## Tests
 
-Run the test suite:
+The automated test suite currently verifies:
+
+- Demo response structure
+- Port-scan detection
+- DNS-spike detection
+- Detection-engine integration
+- Clean traffic produces no alerts
+
+Run all tests:
 
 ```bash
-pytest
+python -m pytest -q
 ```
 
-On Windows using the project virtual environment:
+On Windows:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pytest
+py -m pytest -q
 ```
+
+Using the project virtual environment:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+## Continuous Integration
+
+GitHub Actions automatically runs the test suite when:
+
+- Code is pushed to the repository
+- A pull request is opened or updated
+
+Workflow file:
+
+```text
+.github/workflows/tests.yml
+```
+
+The test badge at the top of this README displays the latest workflow status.
 
 ## Roadmap
 
+- [x] Create modular detection rules
+- [x] Add centralized detection engine
+- [x] Add automated rule tests
+- [x] Add clean-traffic false-positive test
+- [x] Add GitHub Actions test workflow
 - [ ] Add detailed alert evidence views
 - [ ] Export HTML reports
 - [ ] Export analysis results as JSON
+- [ ] Add configurable detection thresholds
 - [ ] Add YAML-based detection rules
 - [ ] Improve TLS and HTTP analysis
 - [ ] Import Zeek logs
@@ -272,7 +341,6 @@ On Windows using the project virtual environment:
 - [ ] Visualize network topology and relationships
 - [ ] Store analyses in SQLite
 - [ ] Add live packet-capture support
-- [ ] Expand automated tests
 - [ ] Add a plugin system for detection rules
 
 ## Technology Stack
@@ -285,6 +353,7 @@ On Windows using the project virtual environment:
 - JavaScript
 - Docker
 - Pytest
+- GitHub Actions
 
 ## Responsible Use
 
@@ -310,13 +379,16 @@ Packet captures may contain sensitive data, including:
 - Device names
 - Internal network information
 
-Do not publish real sensitive captures in a public repository. PCAP files are excluded through `.gitignore`.
+Do not publish real sensitive captures in a public repository.
+
+PCAP files are excluded through `.gitignore`.
 
 ## Contributing
 
 Contributions are welcome.
 
 1. Fork the repository.
+
 2. Create a feature branch:
 
 ```bash
@@ -339,13 +411,17 @@ git push origin feature/new-feature
 
 ## Security Reports
 
-Do not publish security vulnerabilities in public issues. Use GitHub Security Advisories or contact the repository owner privately.
+Do not publish security vulnerabilities in public issues.
+
+Use GitHub Security Advisories or contact the repository owner privately.
 
 See [`SECURITY.md`](SECURITY.md) for more information.
 
 ## License
 
-This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
+This project is licensed under the MIT License.
+
+See [`LICENSE`](LICENSE) for more information.
 
 ## Project Status
 
